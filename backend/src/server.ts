@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
+import WorkspaceRouters from "./routes/workspace.routes.js";
+import ChatPageRouter from "./routes/chatPage.routes.js";
+import MessageRouter from "./routes/message.routes.js";
 
 const app = express();
 dotenv.config();
@@ -16,6 +19,9 @@ app.use(
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/api/workspaces", WorkspaceRouters);
+app.use("/api/messages", ChatPageRouter);
+app.use("api/:chatPageId/messages", MessageRouter);
 
 const PORT = process.env.PORT || 5000;
 
