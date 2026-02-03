@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-ts"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  email     String      @unique
+  password  String
+  name      String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  workspaces Workspace[]
+}
+
+model Workspace {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String      @db.ObjectId
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  chatPages ChatPage[]
+}
+
+model ChatPage {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  workspaceId String    @db.ObjectId
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  title       String    @default("New Chat")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+model Message {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  chatPageId String    @db.ObjectId
+  chatPage   ChatPage @relation(fields: [chatPageId], references: [id], onDelete: Cascade)
+  role        String
+  content     String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+}
