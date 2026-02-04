@@ -17,6 +17,8 @@ import {
   mongoIdSchema,
 } from "../lib/validations.js";
 
+import { z } from "zod";
+
 const WorkspaceRouter = Router();
 
 // All workspace routes require authentication
@@ -25,7 +27,7 @@ WorkspaceRouter.use(authMiddleware as RequestHandler);
 WorkspaceRouter.get("/", getWorkspaces as unknown as RequestHandler);
 WorkspaceRouter.get(
   "/:id",
-  validateParams(mongoIdSchema) as RequestHandler,
+  validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
   getWorkspace as unknown as RequestHandler,
 );
 WorkspaceRouter.post(
@@ -35,13 +37,13 @@ WorkspaceRouter.post(
 );
 WorkspaceRouter.put(
   "/:id",
-  validateParams(mongoIdSchema) as RequestHandler,
+  validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
   validateBody(updateWorkspaceSchema) as RequestHandler,
   updateWorkspace as unknown as RequestHandler,
 );
 WorkspaceRouter.delete(
   "/:id",
-  validateParams(mongoIdSchema) as RequestHandler,
+  validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
   deleteWorkspace as unknown as RequestHandler,
 );
 

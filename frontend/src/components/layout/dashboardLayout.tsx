@@ -25,7 +25,14 @@ export const DashboardLayout = ({
   const selectedWorkspace = workspaces.find((w) => w.id === selectedWorkspaceId) || null;
 
   const userInitials =
-    user?.email?.split("@")[0]?.slice(0, 2)?.toUpperCase() || "U";
+    (user?.name
+      ? user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase()
+      : user?.email?.split("@")[0]?.slice(0, 2)?.toUpperCase()) || "U";
 
   return (
     <div className="h-screen overflow-hidden bg-gray-900 flex">
@@ -62,7 +69,7 @@ export const DashboardLayout = ({
               setMobileMenuOpen(false);
               setSidebarOpen(!sidebarOpen);
             }}
-            className="lg:flex hidden text-gray-400 hover:text-white"
+            className="lg:flex hidden text-gray-400 hover:text-gray-900 hover:bg-white"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -70,7 +77,7 @@ export const DashboardLayout = ({
             variant="ghost"
             size="sm"
             onClick={() => setMobileMenuOpen(false)}
-            className="lg:hidden text-gray-400 hover:text-white"
+            className="lg:hidden text-gray-400 hover:text-gray-900 hover:bg-white"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -91,13 +98,13 @@ export const DashboardLayout = ({
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">{user?.email}</p>
+              <p className="text-sm text-white truncate">{user?.name}</p>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={logout}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-gray-900 hover:bg-white"
             >
               <LogOut className="h-4 w-4" />
             </Button>
@@ -119,7 +126,7 @@ export const DashboardLayout = ({
                 setSidebarOpen(!sidebarOpen);
               }
             }}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-gray-900 hover:bg-white"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -135,7 +142,7 @@ export const DashboardLayout = ({
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-gray-900 hover:bg-white"
           >
             <Settings className="h-4 w-4" />
           </Button>

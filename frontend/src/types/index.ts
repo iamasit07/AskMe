@@ -13,6 +13,9 @@ export interface ChatPage {
   workspaceId: string;
   createdAt: string;
   updatedAt?: string;
+  _count?: {
+    messages: number;
+  };
 }
 
 export interface Message {
