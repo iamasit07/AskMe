@@ -19,7 +19,6 @@ export const ChatInterface = ({ chatPageId }: ChatInterfaceProps) => {
     messages,
     loading: messagesLoading,
     addMessage,
-    updateLastMessage,
     refresh: refetch,
   } = useMessages(chatPageId);
 
