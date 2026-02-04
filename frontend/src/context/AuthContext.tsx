@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 import api from "../lib/axios";
 
@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Try to get user info - if cookie exists, server will authenticate
     api
-      .get("/auth/me")
+      .get("/api/auth/me")
       .then((response) => {
         setUser(response.data.user);
       })
@@ -37,23 +37,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post("/auth/login", { email, password });
-    setUser(data.user);
-  };
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post("/api/auth/login", { email, password });
+      setUser(data.user);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const signup = async (name: string, email: string, password: string) => {
-    const { data } = await api.post("/auth/signup", { name, email, password });
-    setUser(data.user);
-  };
+  const signup = useCallback(async (name: string, email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post("/api/auth/signup", { name, email, password });
+      setUser(data.user);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const logout = async () => {
-    await api.post("/auth/logout");
+  const logout = useCallback(async () => {
+    await api.post("/api/auth/logout");
     setUser(null);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, loading, login, signup, logout }),
+    [user, loading, login, signup, logout]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

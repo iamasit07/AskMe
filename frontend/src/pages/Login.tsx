@@ -43,7 +43,7 @@ export function LoginPage() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 pt-6">
             {error && (
               <div className="p-3 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-md">
                 {error}
@@ -78,7 +78,7 @@ export function LoginPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 mt-6">
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"

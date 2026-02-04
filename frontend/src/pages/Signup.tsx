@@ -24,18 +24,40 @@ export function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length === 0) {
-      setLocalError("Name is required");
+    setLocalError("");
+
+    // Name validation (min 2 characters)
+    if (name.trim().length < 2) {
+      setLocalError("Name must be at least 2 characters");
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setLocalError("Invalid email address");
+      return;
+    }
+
+    if (password.length < 8) {
+      setLocalError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setLocalError("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setLocalError("Password must contain at least one lowercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setLocalError("Password must contain at least one number");
       return;
     }
 
     if (password !== confirmPassword) {
       setLocalError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setLocalError("Password must be at least 6 characters");
       return;
     }
 
@@ -61,7 +83,7 @@ export function SignupPage() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 pt-6">
             {displayError && (
               <div className="p-3 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-md">
                 {displayError}
@@ -69,12 +91,12 @@ export function SignupPage() {
             )}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-gray-200">
-                Email
+                Name
               </Label>
               <Input
                 id="name"
                 type="name"
-                placeholder="you@example.com"
+                placeholder="Enter Your Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -108,6 +130,9 @@ export function SignupPage() {
                 required
                 className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500"
               />
+              <p className="text-xs text-gray-500">
+                Min 8 characters, with uppercase, lowercase, and a number
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-gray-200">
@@ -124,7 +149,7 @@ export function SignupPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 mt-6">
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
