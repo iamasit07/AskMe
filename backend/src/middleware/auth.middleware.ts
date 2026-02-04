@@ -12,13 +12,16 @@ export const authMiddleware = (
   next: NextFunction,
 ) => {
   try {
-    const authHeader = req.headers.authorization;
+    // First try to get token from cookie, then from Authorization header
+    let token = req.cookies?.authToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.split(" ")[1];
+      }
     }
 
-    const token = authHeader.split(" ")[1];
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }

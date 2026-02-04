@@ -23,8 +23,15 @@ export const signup = async (req: Request, res: Response) => {
     });
 
     const token = generateToken({ userId: user.id, email: user.email });
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.status(201).json({
-      token,
       user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (error) {
@@ -47,13 +54,29 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = generateToken({ userId: user.id, email: user.email });
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.json({
-      token,
       user: { id: user.id, email: user.email, name: user.name },
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  res.clearCookie("authToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out successfully" });
 };
 
 export const getMe = async (req: Request, res: Response) => {
