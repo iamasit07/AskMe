@@ -64,7 +64,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     name: string,
   ): Promise<Workspace> => {
     try {
-      const { data } = await api.put(`/api/workspaces/${id}`, { name });
+      const { data } = await api.put(`/api/workspaces/${id}`, {name});
       setWorkspaces((prev) => prev.map((w) => (w.id === id ? data : w)));
       toast.success("Workspace renamed");
       return data;

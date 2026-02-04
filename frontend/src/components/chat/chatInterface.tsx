@@ -19,7 +19,6 @@ export const ChatInterface = ({ chatPageId }: ChatInterfaceProps) => {
     messages,
     loading: messagesLoading,
     addMessage,
-    refresh: refetch,
   } = useMessages(chatPageId);
 
   const {
@@ -67,10 +66,15 @@ export const ChatInterface = ({ chatPageId }: ChatInterfaceProps) => {
       // Send and stream response
       const response = await sendMessage(content, previousMessages);
 
-      // Refetch to get the saved messages from server
+      // Manually add the response to local state to avoid extracting full message list
       if (response) {
-        // Small delay to ensure server has saved the response
-        setTimeout(() => refetch(), 500);
+        addMessage({
+          id: `ai-${Date.now()}`,
+          role: "assistant",
+          content: response,
+          chatPageId,
+          createdAt: new Date().toISOString(),
+        });
       }
     } catch (err) {
       toast.error("Failed to send message", {

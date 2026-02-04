@@ -92,11 +92,12 @@ export const ChatPageList = () => {
                 <MessageSquare className="h-4 w-4 mt-0.5 shrink-0 text-gray-400" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate">{chatPage.title}</p>
-                  {chatPages && (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {chatPages.length} messages
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {(() => {
+                      const count = chatPage._count?.messages || 0;
+                      return count > 90 ? "90+ messages" : `${count} messages`;
+                    })()}
+                  </p>
                 </div>
                 <button
                   onClick={(e) => handleDelete(e, chatPage.id)}

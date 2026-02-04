@@ -38,7 +38,7 @@ export const StreamingMessage = memo(({
         <ToolCallIndicator toolCalls={toolCalls} />
 
         {/* Message Content */}
-        <div className="text-gray-200">
+        <div className="text-gray-200 min-w-0">
           {showThinking ? (
             <div className="flex items-center gap-2 text-gray-400">
               <span>Thinking</span>
@@ -58,7 +58,7 @@ export const StreamingMessage = memo(({
               </span>
             </div>
           ) : content ? (
-            <div className="prose prose-invert prose-sm max-w-none">
+            <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
               </ReactMarkdown>

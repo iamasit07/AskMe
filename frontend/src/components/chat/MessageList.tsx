@@ -3,6 +3,8 @@ import { User, Bot } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Message } from "@/types/index";
 
 interface MessageListProps {
@@ -79,14 +81,15 @@ const MessageItem = ({ message }: MessageItemProps) => {
             {formatTime(message.createdAt)}
           </span>
         </div>
-
-        <div className="text-gray-200">
+        <div className="text-gray-200 min-w-0">
           {isAssistant ? (
-            <div className="prose prose-invert prose-sm max-w-none">
-              {message.content}
+            <div className="prose prose-invert prose-sm sm:prose-base max-w-none break-words">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
             </div>
           ) : (
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words text-sm sm:text-base">{message.content}</p>
           )}
         </div>
       </div>
