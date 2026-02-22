@@ -9,6 +9,7 @@ import WorkspaceRouters from "./routes/workspace.routes.js";
 import ChatPageRouter from "./routes/chatPage.routes.js";
 import MessageRouter from "./routes/message.routes.js";
 import StreamingRouter from "./routes/streaming.routes.js";
+import path from "path";
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ const app: Express = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
 };
@@ -30,7 +31,7 @@ app.use(cookieParser());
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
-    message: "Server is healthy",
+    message: "Server is working and healthy",
   });
 });
 
@@ -40,8 +41,7 @@ app.use("/api/workspaces", WorkspaceRouters);
 app.use("/api/chat-pages", ChatPageRouter);
 app.use("/api/chat-pages/:chatPageId/messages", MessageRouter);
 app.use("/api/chat", StreamingRouter);
-
-// Error handling
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(notFoundHandler);
 app.use(errorHandler);
 
