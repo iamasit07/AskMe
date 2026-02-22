@@ -13,41 +13,51 @@ export const ToolCallIndicator = ({ toolCalls }: ToolCallIndicatorProps) => {
       {toolCalls.map((tool, index) => (
         <div
           key={`${tool.name}-${index}`}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-700/50 rounded-lg text-sm"
+          className="flex flex-col px-3 py-2 bg-gray-700/50 rounded-lg text-sm"
         >
-          {tool.status === "running" ? (
-            <Loader2 className="h-4 w-4 text-blue-400 animate-spin shrink-0" />
-          ) : (
-            <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
-          )}
+          <div className="flex items-center gap-2">
+            {tool.status === "running" ? (
+              <Loader2 className="h-4 w-4 text-blue-400 animate-spin shrink-0" />
+            ) : (
+              <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
+            )}
 
-          {tool.name === "tavily_search_results_json" ||
-          tool.name === "web_search" ||
-          tool.name === "tavily_search" ? (
-            <>
-              <Search className="h-4 w-4 text-gray-400 shrink-0" />
-              <span className="text-gray-300">
-                {tool.status === "running" ? "Searching: " : "Searched: "}
-                <span className="text-blue-400">
-                  {getSearchQuery(tool.input)}
+            {tool.name === "tavily_search_results_json" ||
+            tool.name === "web_search" ||
+            tool.name === "tavily_search" ||
+            tool.name === "universal_web_search" ? (
+              <>
+                <Search className="h-4 w-4 text-gray-400 shrink-0" />
+                <span className="text-gray-300">
+                  {tool.status === "running" ? "Searching: " : "Searched: "}
+                  <span className="text-blue-400">
+                    {getSearchQuery(tool.input)}
+                  </span>
                 </span>
-              </span>
-            </>
-          ) : tool.name === "url_fetcher" ? (
-            <>
-              <Globe className="h-4 w-4 text-gray-400 shrink-0" />
-              <span className="text-gray-300">
-                {tool.status === "running" ? "Fetching: " : "Fetched: "}
-                <span className="text-blue-400 truncate max-w-xs inline-block align-bottom">
-                  {getUrl(tool.input)}
+              </>
+            ) : tool.name === "url_fetcher" ? (
+              <>
+                <Globe className="h-4 w-4 text-gray-400 shrink-0" />
+                <span className="text-gray-300">
+                  {tool.status === "running" ? "Fetching: " : "Fetched: "}
+                  <span className="text-blue-400 truncate max-w-xs inline-block align-bottom">
+                    {getUrl(tool.input)}
+                  </span>
                 </span>
+              </>
+            ) : (
+              <span className="text-gray-300">
+                {tool.status === "running" ? "Running " : "Completed "}
+                <span className="text-blue-400">{tool.name}</span>
               </span>
-            </>
-          ) : (
-            <span className="text-gray-300">
-              {tool.status === "running" ? "Running " : "Completed "}
-              <span className="text-blue-400">{tool.name}</span>
-            </span>
+            )}
+          </div>
+          {tool.messages && tool.messages.length > 0 && (
+            <div className="mt-2 ml-6 text-xs text-gray-400 space-y-1 border-l-2 border-gray-600 pl-2">
+              {tool.messages.map((msg, i) => (
+                <div key={i}>{msg}</div>
+              ))}
+            </div>
           )}
         </div>
       ))}
