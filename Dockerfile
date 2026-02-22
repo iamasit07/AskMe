@@ -37,17 +37,16 @@ COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
-# Create a startup script to run both backend and nginx
 RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'LISTEN_PORT=${PORT:-80}' >> /app/start.sh && \
+    echo 'export PORT=8080' >> /app/start.sh && \
     echo 'cd /app/backend && node dist/server.js & ' >> /app/start.sh && \
+    echo 'sed -i "s/listen 80;/listen $LISTEN_PORT;/" /etc/nginx/http.d/default.conf' >> /app/start.sh && \
     echo 'nginx -g "daemon off;"' >> /app/start.sh && \
     chmod +x /app/start.sh
 
-# Expose ports
 EXPOSE 80
 
-# Environment variables
-ENV PORT=8080
 ENV NODE_ENV=production
 
 CMD ["/app/start.sh"]
