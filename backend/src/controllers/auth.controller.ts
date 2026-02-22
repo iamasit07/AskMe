@@ -7,6 +7,10 @@ import {
   generateAccessToken,
 } from "../lib/jwt.js";
 import { AppError } from "../middleware/errorHandler.middleware.js";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -66,7 +70,7 @@ export const signup = async (
 
     console.log("[AUTH] Signup successful for:", user.email);
     res.status(201).json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
     });
   } catch (error) {
     console.error(
@@ -102,8 +106,7 @@ export const login = async (
       throw new AppError("Invalid email or password", 401);
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    if (!user.password || !await bcrypt.compare(password, user.password)) {
       throw new AppError("Invalid email or password", 401);
     }
 
@@ -117,7 +120,7 @@ export const login = async (
 
     console.log("[AUTH] Login successful for:", user.email);
     res.json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
     });
   } catch (error) {
     console.error(
@@ -190,7 +193,7 @@ export const refresh = async (
     res.cookie("authToken", newAccessToken, ACCESS_COOKIE_OPTIONS);
 
     res.json({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
     });
   } catch (error) {
     next(error);
@@ -211,7 +214,7 @@ export const getMe = async (
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, createdAt: true },
+      select: { id: true, email: true, name: true, avatar: true, createdAt: true },
     });
 
     if (!user) {
@@ -220,6 +223,109 @@ export const getMe = async (
 
     res.json({ user });
   } catch (error) {
+    next(error);
+  }
+};
+
+export const googleAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      throw new AppError("Google credential is required", 400);
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new AppError("Google Client ID not configured on server", 500);
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: clientId,
+    });
+    const payload = ticket.getPayload();
+    if (!payload) {
+      throw new AppError("Invalid Google token", 400);
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+    if (!email) {
+      throw new AppError("Email is not available from Google", 400);
+    }
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || null,
+          googleId,
+          avatar: picture || null,
+        },
+      });
+    } else if (!user.googleId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { googleId },
+      });
+    }
+
+    const { accessToken, refreshToken } = generateTokenPair({
+      userId: user.id,
+      email: user.email,
+    });
+
+    res.cookie("authToken", accessToken, ACCESS_COOKIE_OPTIONS);
+    res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+
+    res.json({
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+       throw new AppError("Unauthorized", 401);
+    }
+    if (!req.file) {
+      throw new AppError("No file uploaded", 400);
+    }
+    const serverUrl = process.env.SERVER_URL || "http://localhost:8000";
+    const avatarUrl = `${serverUrl}/uploads/${req.file.filename}`;
+    
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: avatarUrl }
+    });
+    
+    res.json({ user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar } });
+  } catch(error) {
+    next(error);
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+       throw new AppError("Unauthorized", 401);
+    }
+    
+    const { name } = req.body;
+    
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { name: name || null }
+    });
+    
+    res.json({ user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar } });
+  } catch(error) {
     next(error);
   }
 };

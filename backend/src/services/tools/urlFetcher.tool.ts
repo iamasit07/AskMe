@@ -52,7 +52,11 @@ export const createUrlFetcherTool = () => {
           const $ = cheerio.load(html);
 
           // Remove scripts, styles, and other non-content elements
-          $("script, style, nav, header, footer, aside, noscript").remove();
+          // Enhanced sanitization to remove embedded objects, iframes, and hidden elements to prevent invisible injection attacks
+          $("script, style, nav, header, footer, aside, noscript, iframe, object, embed, meta, link, base").remove();
+          
+          // Remove elements that appear to be hidden via standard inline styles or attributes
+          $("[hidden], [style*='display: none'], [style*='display:none'], input[type='hidden']").remove();
 
           // Extract text from body
           let content = $("body").text();
@@ -69,16 +73,19 @@ export const createUrlFetcherTool = () => {
           // Limit content length
           const maxLength = 10000;
           if (content.length > maxLength) {
-            content =
+           content =
               content.substring(0, maxLength) +
               "...\n[Content truncated due to length]";
           }
 
+          // Format output clearly with delimiters for the LLM
+          const formattedContent = `<source url="${url}">\n<title>${title.trim()}</title>\n<content>\n${content}\n</content>\n</source>`;
+
           return JSON.stringify({
             url,
             title: title.trim(),
-            content,
-            length: content.length,
+            content: formattedContent,
+            length: formattedContent.length,
           });
         } catch (fetchError: unknown) {
           clearTimeout(timeoutId);

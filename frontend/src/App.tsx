@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LoginPage } from "./pages/Login";
 import { SignupPage } from "./pages/Signup";
 import { DashboardPage } from "./pages/dashboard";
+import { ProfilePage } from "./pages/Profile";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
@@ -25,6 +26,18 @@ function App() {
                   <WorkspaceProvider>
                     <SelectionProvider>
                       <DashboardPage />
+                    </SelectionProvider>
+                  </WorkspaceProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceProvider>
+                    <SelectionProvider>
+                      <ProfilePage />
                     </SelectionProvider>
                   </WorkspaceProvider>
                 </ProtectedRoute>

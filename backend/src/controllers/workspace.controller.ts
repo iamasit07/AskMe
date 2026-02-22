@@ -1,6 +1,47 @@
 import type { Request, Response, NextFunction } from "express";
 import prisma from "../lib/prisma.js";
 import { AppError } from "../middleware/errorHandler.middleware.js";
+import { addDocumentToWorkspace } from "../services/pinecone.service.js";
+
+// Add document to workspace
+export const addDocument = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user?.id;
+    const id = req.params.id as string;
+    const { text, title } = req.body;
+
+    if (!userId) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    if (!id) {
+      throw new AppError("Workspace ID is required", 400);
+    }
+
+    if (!text || typeof text !== "string" || text.trim().length === 0) {
+      throw new AppError("Document text is required", 400);
+    }
+
+    // Check ownership
+    const existingWorkspace = await prisma.workspace.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existingWorkspace) {
+      throw new AppError("Workspace not found", 404);
+    }
+
+    await addDocumentToWorkspace(id, text, title);
+
+    res.status(200).json({ message: "Document added successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getWorkspaces = async (
   req: Request,

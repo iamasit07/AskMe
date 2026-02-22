@@ -75,7 +75,7 @@ export const streamChat = async (
 
     const agentMessages = convertToLangChainMessages(messageContent);
 
-    const agent = getChatAgent();
+    const agent = await getChatAgent();
     let fullContent = "";
     const toolCalls: Array<{ name: string; args: unknown; result?: string }> =
       [];
@@ -208,7 +208,7 @@ export const completeChat = async (
     });
 
     const agentMessages = convertToLangChainMessages(messageContent);
-    const agent = getChatAgent();
+    const agent = await getChatAgent();
     const resultMessages = await agent.invoke(agentMessages);
 
     // Extract text content from the last AI message

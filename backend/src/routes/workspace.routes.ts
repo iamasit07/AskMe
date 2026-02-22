@@ -5,6 +5,7 @@ import {
   getWorkspace,
   getWorkspaces,
   updateWorkspace,
+  addDocument,
 } from "../controllers/workspace.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import {
@@ -45,6 +46,11 @@ WorkspaceRouter.delete(
   "/:id",
   validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
   deleteWorkspace as unknown as RequestHandler,
+);
+WorkspaceRouter.post(
+  "/:id/documents",
+  validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
+  addDocument as unknown as RequestHandler,
 );
 
 export default WorkspaceRouter;

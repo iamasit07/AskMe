@@ -6,6 +6,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -13,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  authWithGoogle: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -26,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Try to get user info - if cookie exists, server will authenticate
     api
       .get("/api/auth/me")
-      .then((response) => {
+      .then((response: { data: { user: User } }) => {
         setUser(response.data.user);
       })
       .catch(() => {
@@ -57,14 +59,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const authWithGoogle = useCallback(async (credential: string) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post("/api/auth/google", { credential });
+      setUser(data.user);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await api.post("/api/auth/logout");
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, signup, logout }),
-    [user, loading, login, signup, logout]
+    () => ({ user, loading, login, signup, authWithGoogle, logout }),
+    [user, loading, login, signup, authWithGoogle, logout]
   );
 
   return (

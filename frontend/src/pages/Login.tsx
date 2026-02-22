@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GoogleLogin } from "@react-oauth/google";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -13,15 +15,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const { login, authWithGoogle, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    try {
+      loginSchema.parse({ email, password });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+        return;
+      }
+    }
+
     try {
       await login(email, password);
       navigate("/");
@@ -49,6 +66,34 @@ export function LoginPage() {
                 {error}
               </div>
             )}
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    if (credentialResponse.credential) {
+                      authWithGoogle(credentialResponse.credential)
+                        .then(() => navigate("/"))
+                        .catch(() => setError("Google login failed"));
+                    }
+                  }}
+                  onError={() => {
+                    setError("Google Login Failed");
+                  }}
+                  theme="filled_black"
+                  shape="rectangular"
+                  width="100%"
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gray-800/50 px-2 text-gray-400">Or continue with</span>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-200">
                 Email

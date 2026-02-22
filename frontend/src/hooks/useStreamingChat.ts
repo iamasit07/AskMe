@@ -13,6 +13,7 @@ export interface ToolCallInfo {
   input?: unknown;
   output?: unknown;
   status: "running" | "completed";
+  messages?: string[];
 }
 
 interface UseStreamingChatReturn {
@@ -132,6 +133,24 @@ export const useStreamingChat = (
                               ...t,
                               output: toolEnd.output,
                               status: "completed" as const,
+                            }
+                          : t,
+                      ),
+                    );
+                    break;
+                  }
+
+                  case "tool_status": {
+                    const toolStatus = event.data as {
+                      toolName: string;
+                      message: string;
+                    };
+                    setToolCalls((prev) =>
+                      prev.map((t) =>
+                        t.name === toolStatus.toolName && t.status === "running"
+                          ? {
+                              ...t,
+                              messages: [...(t.messages || []), toolStatus.message],
                             }
                           : t,
                       ),
