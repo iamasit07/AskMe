@@ -48,6 +48,19 @@ export function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side image type validation
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload only image files.");
+      return;
+    }
+
+    // Client-side 5MB size validation
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      alert("File too large. Maximum size is 5MB.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("avatar", file);
 

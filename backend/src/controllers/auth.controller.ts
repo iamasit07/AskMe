@@ -296,12 +296,25 @@ export const updateAvatar = async (req: Request, res: Response, next: NextFuncti
     if (!req.file) {
       throw new AppError("No file uploaded", 400);
     }
-    const serverUrl = process.env.SERVER_URL || "http://localhost:8000";
-    const avatarUrl = `${serverUrl}/uploads/${req.file.filename}`;
+
+    // Explicit image-only check (in addition to multer's fileFilter)
+    if (!req.file.mimetype.startsWith("image/")) {
+      throw new AppError("Not an image! Please upload only images.", 400);
+    }
+
+    // Explicit 5MB size check (in addition to multer's limits)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > MAX_SIZE) {
+      throw new AppError("File too large. Maximum size is 5MB.", 400);
+    }
+
+    // Convert buffer to base64 data URI
+    const base64 = req.file.buffer.toString("base64");
+    const avatarDataUri = `data:${req.file.mimetype};base64,${base64}`;
     
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { avatar: avatarUrl }
+      data: { avatar: avatarDataUri }
     });
     
     res.json({ user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar } });

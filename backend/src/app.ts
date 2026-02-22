@@ -9,7 +9,6 @@ import WorkspaceRouters from "./routes/workspace.routes.js";
 import ChatPageRouter from "./routes/chatPage.routes.js";
 import MessageRouter from "./routes/message.routes.js";
 import StreamingRouter from "./routes/streaming.routes.js";
-import path from "path";
 
 dotenv.config();
 
@@ -41,7 +40,6 @@ app.use("/api/workspaces", WorkspaceRouters);
 app.use("/api/chat-pages", ChatPageRouter);
 app.use("/api/chat-pages/:chatPageId/messages", MessageRouter);
 app.use("/api/chat", StreamingRouter);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(notFoundHandler);
 app.use(errorHandler);
 

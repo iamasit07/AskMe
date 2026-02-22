@@ -30,7 +30,6 @@ COPY --from=backend-build /app/backend/package*.json ./backend/
 COPY --from=backend-build /app/backend/node_modules ./backend/node_modules/
 COPY --from=backend-build /app/backend/dist ./backend/dist/
 COPY --from=backend-build /app/backend/prisma ./backend/prisma/
-COPY --from=backend-build /app/backend/uploads ./backend/uploads/
 
 # Copy frontend build
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
@@ -40,7 +39,7 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Create a startup script to run both backend and nginx
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'node /app/backend/dist/server.js & ' >> /app/start.sh && \
+    echo 'cd /app/backend && node dist/server.js & ' >> /app/start.sh && \
     echo 'nginx -g "daemon off;"' >> /app/start.sh && \
     chmod +x /app/start.sh
 
