@@ -3,6 +3,7 @@ import { z } from "zod";
 import { tavily } from "@tavily/core";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { dispatchCustomEvent } from "@langchain/core/callbacks/dispatch";
+import { addDocumentToWorkspace } from "../pinecone.service.js";
 
 function detectIntent(query: string): string {
   const q = query.toLowerCase();
@@ -67,9 +68,18 @@ async function predictLikelyUrls(llm: ChatGoogleGenerativeAI, query: string, int
   }
 }
 
-function buildResponse(results: any[], stage: string, intent: string): string {
+async function buildResponse(results: any[], stage: string, intent: string, workspaceId?: string): Promise<string> {
   const deduped = deduplicateByUrl(results);
   const sorted = deduped.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  if (workspaceId && sorted.length > 0) {
+    const combinedContent = sorted.map(r => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.content || r.rawContent || ""}`).join("\n\n---\n\n").trim();
+    if (combinedContent.length > 0) {
+       await addDocumentToWorkspace(workspaceId, combinedContent, `Web Search: ${intent}`).catch(e => console.error("[TavilyCascade] Pinecone ingest error", e));
+    } else {
+       console.warn(`[TavilyCascade] Skipped Pinecone ingestion for intent: ${intent} due to empty content.`);
+    }
+  }
 
   return JSON.stringify({
     found: true,
@@ -79,7 +89,7 @@ function buildResponse(results: any[], stage: string, intent: string): string {
   });
 }
 
-export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
+export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI, workspaceId?: string) {
   const tavilyClient = tavily({ apiKey: process.env.TAVILY_API_KEY || "" });
 
   return new DynamicStructuredTool({
@@ -111,7 +121,7 @@ export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
         const results1 = stage1.results || (Array.isArray(stage1) ? stage1 : []);
         allCollectedResults.push(...results1);
         if (meetsThreshold(allCollectedResults, 0.7, 2)) {
-          return buildResponse(allCollectedResults, "Stage 1", intent);
+          return await buildResponse(allCollectedResults, "Stage 1", intent, workspaceId);
         }
       } catch (e) {
         console.error("[TavilyCascade] Stage 1 error", e);
@@ -131,7 +141,7 @@ export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
         allCollectedResults.push(...results2);
         const deduped2 = deduplicateByUrl(allCollectedResults);
         if (meetsThreshold(deduped2, 0.6, 2)) {
-          return buildResponse(deduped2, "Stage 2", intent);
+          return await buildResponse(deduped2, "Stage 2", intent, workspaceId);
         }
       } catch (e) {
         console.error("[TavilyCascade] Stage 2 error", e);
@@ -158,7 +168,7 @@ export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
         
         const deduped3 = deduplicateByUrl(allCollectedResults);
         if (meetsThreshold(deduped3, 0.5, 2)) {
-          return buildResponse(deduped3, "Stage 3", intent);
+          return await buildResponse(deduped3, "Stage 3", intent, workspaceId);
         }
       } catch (e) {
         console.error("[TavilyCascade] Stage 3 error", e);
@@ -177,7 +187,7 @@ export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
         allCollectedResults.push(...results4);
         const deduped4 = deduplicateByUrl(allCollectedResults);
         if (meetsThreshold(deduped4, 0.4, 1)) {
-          return buildResponse(deduped4, "Stage 4", intent);
+          return await buildResponse(deduped4, "Stage 4", intent, workspaceId);
         }
       } catch (e) {
         console.error("[TavilyCascade] Stage 4 error", e);
@@ -197,7 +207,7 @@ export function createTavilyCascadeTool(llm: ChatGoogleGenerativeAI) {
           allCollectedResults.push(...validExtracted);
           const deduped5 = deduplicateByUrl(allCollectedResults);
           if (deduped5.length >= 1) {
-            return buildResponse(deduped5, "Stage 5", intent);
+            return await buildResponse(deduped5, "Stage 5", intent, workspaceId);
           }
         }
       } catch (e) {

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { refreshAuth } from "@/lib/axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -54,14 +55,32 @@ export const useStreamingChat = (
       try {
         const messages = [...previousMessages, { role: "user", content }];
 
-        const response = await fetch(`${API_URL}/api/chat/${chatBlockId}/stream`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // This sends cookies with the request
-          body: JSON.stringify(messages),
-        });
+        const doFetch = () =>
+          fetch(`${API_URL}/api/chat/${chatBlockId}/stream`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(messages),
+          });
+
+        let response = await doFetch();
+
+        // If token expired, try refreshing and retry once
+        if (response.status === 401) {
+          const refreshed = await refreshAuth();
+          if (refreshed) {
+            response = await doFetch();
+          } else {
+            // Refresh failed — redirect to login
+            if (window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
+              window.location.href = "/login";
+            }
+            setIsStreaming(false);
+            return "";
+          }
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP error: ${response.status}`);

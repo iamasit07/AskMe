@@ -10,8 +10,6 @@ import { z } from 'zod';
 import { ContextualCompressionRetriever } from "@langchain/classic/retrievers/contextual_compression";
 import { EmbeddingsFilter } from "@langchain/classic/retrievers/document_compressors/embeddings_filter";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import dotenv from 'dotenv';
-dotenv.config();
 
 export interface SSEEvent {
   type: 'token' | 'tool_start' | 'tool_end' | 'message' | 'done' | 'error' | 'tool_status';
@@ -47,16 +45,18 @@ export class ChatAgent {
       apiKey: apiKey as string,
     });
 
-    this.tools = [
-      createTavilyCascadeTool(this.model),
-      createUrlFetcherTool(),
-    ];
+    this.tools = [];
   }
 
   public async initialize(workspaceId?: string) {
+    this.tools = [
+      createTavilyCascadeTool(this.model, workspaceId),
+      createUrlFetcherTool(workspaceId),
+    ];
+
     if (workspaceId) {
-      const vectorStore = await getVectorStore(workspaceId);
-      const baseRetriever = vectorStore.asRetriever(5); // Fetch more initially
+      const vectorStore = await getVectorStore();
+      const baseRetriever = vectorStore.asRetriever({ k: 5, filter: { workspaceId } }); // Fetch more initially
 
       const embeddings = new GoogleGenerativeAIEmbeddings({
         modelName: 'text-embedding-004',
@@ -80,7 +80,7 @@ export class ChatAgent {
           query: z.string().describe("The search query to look up in the workspace vector database"),
         }),
         func: async ({ query }) => {
-          const docs = await retriever._getRelevantDocuments(query);
+          const docs = await retriever.invoke(query);
           return JSON.stringify(docs.map((d: any) => ({ content: d.pageContent, title: d.metadata.title })));
         }
       });

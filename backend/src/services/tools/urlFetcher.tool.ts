@@ -1,8 +1,9 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import * as cheerio from "cheerio";
+import { addDocumentToWorkspace } from "../pinecone.service.js";
 
-export const createUrlFetcherTool = () => {
+export const createUrlFetcherTool = (workspaceId?: string) => {
   return new DynamicStructuredTool({
     name: "url_fetcher",
     description:
@@ -80,6 +81,14 @@ export const createUrlFetcherTool = () => {
 
           // Format output clearly with delimiters for the LLM
           const formattedContent = `<source url="${url}">\n<title>${title.trim()}</title>\n<content>\n${content}\n</content>\n</source>`;
+
+          if (workspaceId && content.length > 0) {
+            await addDocumentToWorkspace(workspaceId, formattedContent, title.trim()).catch(e => 
+              console.error("[UrlFetcher] External fetch pinecone ingest error:", e)
+            );
+          } else if (workspaceId) {
+             console.warn(`[UrlFetcher] Skipped Pinecone ingestion for URL: ${url} due to empty content.`);
+          }
 
           return JSON.stringify({
             url,

@@ -32,6 +32,30 @@ const processQueue = (error: Error | null) => {
   failedQueue = [];
 };
 
+export const refreshAuth = async (): Promise<boolean> => {
+  if (isRefreshing) {
+    return new Promise((resolve) => {
+      failedQueue.push({
+        resolve: () => resolve(true),
+        reject: () => resolve(false),
+      });
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    await api.post("/api/auth/refresh");
+    processQueue(null);
+    return true;
+  } catch {
+    processQueue(new Error("Refresh failed"));
+    return false;
+  } finally {
+    isRefreshing = false;
+  }
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -42,34 +66,22 @@ api.interceptors.response.use(
       originalRequest &&
       !originalRequest._retry
     ) {
-      if (originalRequest.url?.includes("/api/auth/")) {
+      if (originalRequest.url?.includes("/api/auth/login") || originalRequest.url?.includes("/api/auth/refresh")) {
         return Promise.reject(error);
       }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => api(originalRequest))
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
-      try {
-        await api.post("/api/auth/refresh");
-        processQueue(null);
+      const refreshed = await refreshAuth();
 
+      if (refreshed) {
         return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError as Error);
-
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
+
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

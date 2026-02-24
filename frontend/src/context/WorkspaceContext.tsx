@@ -18,6 +18,7 @@ export interface WorkspaceContextType {
   createWorkspace: (name: string) => Promise<Workspace>;
   updateWorkspace: (id: string, name: string) => Promise<Workspace>;
   deleteWorkspace: (id: string) => Promise<void>;
+  uploadDocument: (workspaceId: string, file: File) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -85,6 +86,22 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const uploadDocument = async (workspaceId: string, file: File): Promise<void> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await api.post(`/api/workspaces/${workspaceId}/documents/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      toast.success("Document uploaded and processed successfully");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to upload document");
+      throw err;
+    }
+  };
+
   const value = useMemo(
     () => ({
       workspaces,
@@ -94,8 +111,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       createWorkspace,
       updateWorkspace,
       deleteWorkspace,
+      uploadDocument,
     }),
-    [workspaces, loading, error, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace]
+    [workspaces, loading, error, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace, uploadDocument]
   );
 
   return (

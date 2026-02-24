@@ -1,8 +1,10 @@
-import app from "./app.js";
+import path from "path";
 import dotenv from "dotenv";
-import { connectDatabase } from "./lib/prisma.js";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
+
+import app from "./app.js";
+import { connectDatabase } from "./lib/prisma.js";
 
 const PORT = process.env.PORT || 5000;
 

@@ -16,3 +16,18 @@ export const uploadAvatar = multer({
     }
   },
 });
+
+export const uploadDocument = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new AppError("Invalid file type. Only PDF and Image (JPG, PNG, WebP) files are allowed.", 400));
+    }
+  },
+});

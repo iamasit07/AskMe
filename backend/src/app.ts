@@ -1,7 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
 import { notFoundHandler } from "./middleware/errorHandler.middleware.js";
 import errorHandler from "./middleware/errorHandler.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -9,8 +8,6 @@ import WorkspaceRouters from "./routes/workspace.routes.js";
 import ChatPageRouter from "./routes/chatPage.routes.js";
 import MessageRouter from "./routes/message.routes.js";
 import StreamingRouter from "./routes/streaming.routes.js";
-
-dotenv.config();
 
 const app: Express = express();
 

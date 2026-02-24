@@ -6,8 +6,10 @@ import {
   getWorkspaces,
   updateWorkspace,
   addDocument,
+  uploadFile,
 } from "../controllers/workspace.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import { uploadDocument } from "../middleware/upload.middleware.js";
 import {
   validateBody,
   validateParams,
@@ -51,6 +53,12 @@ WorkspaceRouter.post(
   "/:id/documents",
   validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
   addDocument as unknown as RequestHandler,
+);
+WorkspaceRouter.post(
+  "/:id/documents/upload",
+  validateParams(z.object({ id: mongoIdSchema })) as RequestHandler,
+  uploadDocument.single("file") as RequestHandler,
+  uploadFile as unknown as RequestHandler,
 );
 
 export default WorkspaceRouter;

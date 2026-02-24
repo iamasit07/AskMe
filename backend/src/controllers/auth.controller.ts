@@ -172,6 +172,18 @@ export const refresh = async (
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch {
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
+      });
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/api/auth",
+      });
       throw new AppError("Invalid or expired refresh token", 401);
     }
 

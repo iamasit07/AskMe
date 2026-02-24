@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, Plus, FolderOpen, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, FolderOpen, MoreVertical, Pencil, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import useWorkspaces from "@/hooks/useWorkspaces";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 import { EditWorkspaceDialog } from "./EditWorkspaceDialog";
+import { UploadDocumentDialog } from "./UploadDocumentDialog";
 import type { Workspace } from "@/types/index";
 
 import { useSelection } from "@/context/SelectionContext";
@@ -19,8 +20,9 @@ export function WorkspaceSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
+  const [uploadingWorkspace, setUploadingWorkspace] = useState<Workspace | null>(null);
   
-  const { workspaces, loading, refresh, updateWorkspace, deleteWorkspace } = useWorkspaces();
+  const { workspaces, loading, refresh, updateWorkspace, deleteWorkspace, uploadDocument } = useWorkspaces();
   const { selectedWorkspaceId, selectWorkspace } = useSelection();
 
   const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId) || null;
@@ -123,6 +125,16 @@ export function WorkspaceSelector() {
                                     <span>Rename</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setUploadingWorkspace(workspace);
+                                    }}
+                                    className="cursor-pointer focus:bg-gray-700 focus:text-blue-400"
+                                >
+                                    <Upload className="mr-2 h-3.5 w-3.5" />
+                                    <span>Upload File</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
                                     onClick={(e) => handleDelete(e, workspace.id)}
                                     className="cursor-pointer text-red-400 focus:bg-red-900/30 focus:text-red-300"
                                 >
@@ -165,6 +177,13 @@ export function WorkspaceSelector() {
         onOpenChange={(open) => !open && setEditingWorkspace(null)}
         onSuccess={handleWorkspaceUpdated}
         updateWorkspace={updateWorkspace}
+      />
+
+      <UploadDocumentDialog 
+        workspace={uploadingWorkspace}
+        open={!!uploadingWorkspace}
+        onOpenChange={(open) => !open && setUploadingWorkspace(null)}
+        uploadDocument={uploadDocument}
       />
     </>
   );
